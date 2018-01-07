@@ -3,21 +3,6 @@ grammar MiniJava;
 	import java.util.*;
 }
 
-@parser::members{
-	//判断某个类名是否已经存在
-	public static boolean isExists(ProgContext prog, String class_name){
-		boolean flag = false;
-		List<Class_declContext> class_list = prog.class_list;
-		for(Class_declContext e:class_list)	{
-			if (e.name.equals(class_name)){
-				flag = true;
-				break;				
-			}			 
-		}
-		return flag;	
-	}
-}
-
 prog
 :   (class_list += class_decl)+
 ;
@@ -27,32 +12,35 @@ locals[
 	String name    
 ]
 /* List of symbols defined within this block */
-    : 
-    // 'class' class_name = ID ( EXTENDS ID ) ?
-    class_head_name 
+    :  'class' class_name = ID ( EXTENDS ID ) ? 
     '{'
 	( ('public'|'protected'|'private')? ('static')? var_list += var_decl SEMICOLON)*
 	  (func_list += method_decl)*
 	'}'
-    ;
-    
-class_head_name:
-	'class' class_name = ID ( EXTENDS parent_name = ID ) ?
-	{
-		Class_declContext parent =(Class_declContext) ($ctx.getParent());
-		parent.name = $class_name.text;
+	
+    {	//动作处理部分
+		ProgContext prog =(ProgContext) ($ctx.getParent());
+		List<Class_declContext> class_list = prog.class_list;
 		
-		ProgContext prog =(ProgContext) (parent.getParent());
+		$ctx.name = $class_name.text;
 		
-		if (MiniJavaParser.isExists(prog,parent.name))
-			System.out.println("class name: " + parent.name + " is refined " + "at line " 
+		//判断类名是否存在	
+		boolean flag = true;	
+		for(Class_declContext e:class_list)	{
+			if (e.name.equals($ctx.name)){
+				flag = false;				
+				System.out.println("class name: " + $ctx.name + "is refined " + "at line " 
 					+ $class_name.line + ":" + $class_name.pos
 				);
-		else
+			}			 
+		}
+		if (flag) {
 			System.out.println("add new class name:" + $ctx.name + " to class name list");	
-	}
-	;    
-    
+		}
+    }
+    ;
+   
+
 var_decl
 locals
 [
@@ -113,7 +101,9 @@ locals
 			}
 			
 			if (flag) {
-				//System.out.println("add new par: " + $ctx.name +" in function " + c.name + " successful");
+				System.out.println("add new par: " + $ctx.name +" in function " + 
+					c.name + " successful"
+				);
 			}	
 		}
 		else if (parent instanceof Method_declContext){  //如果是函数中的局部变量 
@@ -143,14 +133,18 @@ locals
 					if (v.name.equals($ID.text))
 					{
 						flag = false;
-						//System.out.println("para " + $ID.text + " is refined " + "at line "+ $ID.line + ":" + $ID.pos);
+						System.out.println("para " + $ID.text + " is refined " + "at line " 
+						+ $ID.line + ":" + $ID.pos
+						);
 						break;	
 					}
 				}
 			}
 			
 			if (flag) {
-				//System.out.println("add new var: " + $ctx.name +" in function " + c.name + " successful");
+				System.out.println("add new var: " + $ctx.name +" in function " + 
+					c.name + " successful"
+				);
 			}
 		}
 	}
@@ -211,91 +205,30 @@ stat:
 	|	'while' '(' expr ')' stat
 	|	'System.out.println' '(' expr ')' ';'
 	|	ID ASSIGN_OP expr ';'
-	{
-		//辅助语句进行检查,左边的ID必须存在,并且和右边的表达式类型名一致
-				
-	}
 	|	ID '[' expr ']' '=' expr ';'
-	{
-		
-	}
 	;		
 
 expr_list:
 	expr(',' expr)*
 	;
 
-expr returns [String type]:      //type记录表达式的类型名
-	'(' a=expr ')'
-	{
-		$type = $a.type;
-	}
-	|	a = expr '[' expr ']'
-	{
-		int L=$a.type.length();
-		$type = $a.type.substring(0,L-2);
-	}
+expr returns [String t]:   
+	'(' expr ')'
+	|	expr '[' expr ']'
 	|	expr '.' 'length'
-	{
-		$type = "int";
-	}
-	|   expr.ID '(' (expr_list)? ')'{
-		
-	}
-	|	'new' basic_type  array_decl   //多维数组定义
-	{
-		$type = $basic_type.text+$array_decl.text;
-	}  
-	|	'new' ID '(' ')'              //单变量定义
-	{
-		$type = $ID.text;
-	}
+	|   expr.ID '(' (expr_list)? ')'
+	|	'new' 'int' '[' expr ']'  
+	|	'new' ID '(' ')'
 	|	'!' expr
-	{
-		$type = "boolean";
-	}
 	| 	expr MUL_OP  expr
-	{
-		$type = "int";
-	}
 	| 	expr ADD_OP expr
-	{
-		$type = "int";
-	}
 	| 	expr RELATION_OP expr
-	{
-		$type = "boolean";
-	}
 	| 	expr LOGIC_OP expr
-	{
-		$type = "boolean";
-	}
 	|  INT
-	{
-		$type = "int";
-	}
 	|  ID
-	{
-		boolean found =false;
-		
-	}
 	|  'true'
-	{
-		$type = "boolean";
-	}
 	|  'false'
-	{
-		$type = "boolean";
-	}
 	|  'this'
-	{
-		//this对象的类型名是所在类的类名
-		//$type = "boolean";
-	}
-	;
-
-array_decl:
-	('[expr]')+
 	;
 
 ASSIGN_OP:
