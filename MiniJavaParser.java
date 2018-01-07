@@ -122,10 +122,10 @@ public class MiniJavaParser extends Parser {
 				);
 			}
 		}
-		
+
+		//检查两个操作数的类型是否符合要求	
 		public static void checkType(String a,String b, Token op,String type)
 		{
-			//检查两个操作数的类型是否都为int
 			if (a== null || !(a.equals(type))){
 				System.out.println("type mismatched in arg1 of expression at line " +
 					op.getLine() +":" + op.getCharPositionInLine()
@@ -644,7 +644,7 @@ public class MiniJavaParser extends Parser {
 						
 						if (MiniJavaParser.isParaExists(c,var_name))
 						{
-							System.out.println("para " + (((Var_declContext)_localctx).ID!=null?((Var_declContext)_localctx).ID.getText():null)+"in function" + c.name + " is refined " + "at line " 
+							System.out.println("para " + (((Var_declContext)_localctx).ID!=null?((Var_declContext)_localctx).ID.getText():null)+" in function" + c.name + " is refined " + "at line " 
 								+ (((Var_declContext)_localctx).ID!=null?((Var_declContext)_localctx).ID.getLine():0) + ":" + (((Var_declContext)_localctx).ID!=null?((Var_declContext)_localctx).ID.getCharPositionInLine():0)
 								);
 						}

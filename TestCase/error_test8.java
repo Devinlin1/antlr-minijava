@@ -2,7 +2,8 @@
 class Test{
 	void f(int y){
 		int x;
-		x=2+true;
+		x=2+3; //ÕıÈ·
+		x=2+true;  //´íÎó
 		return;
 	}
 }
