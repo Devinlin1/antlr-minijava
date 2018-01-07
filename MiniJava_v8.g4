@@ -6,45 +6,6 @@ grammar MiniJava;
 @parser::members{
 	public enum Scope{MEMBER,FUNC};   //变量的作用域
 	
-	public static boolean isArrayType(String a)	{
-		return (a!= null && a.indexOf("[]") != -1);
-	}
-	
-	public static void checkArrayType(String a,Token op)	{
-		if(!isArrayType(a)) {
-			System.out.println("type mismatched :need an array name at line " +
-				op.getLine() +":" + op.getCharPositionInLine()
-			);
-		}
-	}
-	
-	public static boolean isRequireType(String a,String type){
-		return (a!=null && a.equals(type));
-	}
-	
-	public static void checkType(String a,Token op,String type){
-		if (!(isRequireType(a,type))){
-			System.out.println("type mismatched :need " + type+ " at line " +
-				op.getLine() +":" + op.getCharPositionInLine()
-			);
-		}
-	}
-	
-	public static void checkType(String a,String b, Token op,String type)
-	{
-		//检查两个操作数的类型是否都为int
-		if (a== null || !(a.equals(type))){
-			System.out.println("type mismatched in arg1 of expression at line " +
-				op.getLine() +":" + op.getCharPositionInLine()
-			);
-		}
-		if (b == null || !(b.equals(type))){
-			System.out.println("type mismatched in arg2 of expression at line " +
-				op.getLine() +":" + op.getCharPositionInLine()
-			);
-		}
-	}
-	
 	//判断某个id是否和关键字重合了
 	public static boolean isKeyWord(String id)
 	{
@@ -101,26 +62,6 @@ grammar MiniJava;
 	
 	public static boolean isVarExists(Class_declContext obj, String class_name){
 		return findVar(obj, class_name) != null;	
-	}
-
-	//从某个表达式所在的作用域开始想上查找某个变量名
-	public static Var_declContext findVar(ExprContext expr, String var_name){
-		Var_declContext v =null;
-		ParserRuleContext parent = expr.getParent();
-		while (!(parent instanceof Method_declContext)){
-			parent = parent.getParent();
-		}
-		
-		Method_declContext func = (Method_declContext)parent;
-		v = findVar(func,var_name);
-		if (v==null){
-			v = findPara(func,var_name);
-		}
-		if (v==null){
-			Class_declContext c=(Class_declContext)(func.getParent());
-			v = findVar(c,var_name);
-		}
-		return v;
 	}
 		
 	//在函数的变量列表里查找某个变量名
@@ -399,9 +340,13 @@ stat:
 	|	'if' '(' expr ')' stat 'else' stat
 	|	'while' '(' expr ')' stat
 	|	'System.out.println' '(' expr ')' ';'
-	|	ID (array_index)? ASSIGN_OP expr ';'
+	|	ID ASSIGN_OP expr ';'
 	{
 		//对辅助语句进行检查,左边的ID必须存在,并且和右边的表达式类型名一致
+	}
+	|	ID '[' expr ']' '=' expr ';'
+	{
+		
 	}
 	;		
 
@@ -414,30 +359,25 @@ expr returns [String type]:      //type记录表达式的类型名
 	{
 		$type = $a.type;
 	}
-	|	a = expr  op='[' b= expr ']'
+	|	a = expr '[' expr ']'
 	{
-		MiniJavaParser.checkArrayType($a.type,$op);
-		MiniJavaParser.checkType($b.type,$op,"int");
-		if (MiniJavaParser.isArrayType($a.type)){
-			int L =$a.type.length();
-			$type = $a.type.substring(0,L-2);
-		}
+		int L=$a.type.length();
+		$type = $a.type.substring(0,L-2);
 	}
-	|	a=expr op=MEMBER_OP 'length'
+	|	a=expr '.' 'length'
 	{
-		MiniJavaParser.checkArrayType($a.type,$op);
 		$type = "int";
 	}
-	|   a=expr op=MEMBER_OP ID '(' (expr_list)? ')'{
+	|   a=expr.ID '(' (expr_list)? ')'{
 		
 	}
-	|	'new' basic_type array_index   //多维数组定义
+	|	'new' basic_type  array_decl   //多维数组定义
 	{
-		$type = $basic_type.text+$array_index.text;
+		$type = $basic_type.text+$array_decl.text;
 	}  
-	|	'new' basic_type '(' ')'              //单变量定义
+	|	'new' ID '(' ')'              //单变量定义
 	{
-		$type = $basic_type.text;
+		$type = $ID.text;
 	}
 	|	'!' a=expr
 	{
@@ -446,22 +386,51 @@ expr returns [String type]:      //type记录表达式的类型名
 	| 	a=expr op=MUL_OP  b=expr
 	{
 		//检查两个操作数的类型是否都为int
-		MiniJavaParser.checkType($a.type,$b.type,$op,"int");
+		if (!($a.type.equals("int"))){
+			System.out.println("type mismatched in arg1 of expression at line" +
+				$op.line + $op.pos
+			);
+		}
+		if (!($b.type.equals("int"))){
+			System.out.println("type mismatched in arg2 of expression at line" +
+				$op + $op.pos
+			);
+		}
 		$type = "int";
 	}
 	| 	a=expr op=ADD_OP b=expr
 	{
-		MiniJavaParser.checkType($a.type,$b.type,$op,"int");
+		//检查两个操作数的类型是否都为int
+		if (!($a.type.equals("int"))){
+			System.out.println("type mismatched in arg1 of expression at line" +
+				$op.line + $op.pos
+			);
+		}
+		if (!($b.type.equals("int"))){
+			System.out.println("type mismatched in arg2 of expression at line" +
+				$op + $op.pos
+			);
+		}
 		$type = "int";
 	}
 	| 	a=expr op=RELATION_OP b=expr
 	{
-		MiniJavaParser.checkType($a.type,$b.type,$op,"int");
+		//检查两个操作数的类型是否都为int
+		if (!($a.type.equals("int"))){
+			System.out.println("type mismatched in arg1 of expression at line" +
+				$op.line + $op.pos
+			);
+		}
+		if (!($b.type.equals("int"))){
+			System.out.println("type mismatched in arg2 of expression at line" +
+				$op + $op.pos
+			);
+		}
 		$type = "boolean";
 	}
 	| 	a=expr op=LOGIC_OP b=expr
 	{
-		MiniJavaParser.checkType($a.type,$b.type,$op,"boolean");
+		
 		$type = "boolean";
 	}
 	|  INT
@@ -470,15 +439,12 @@ expr returns [String type]:      //type记录表达式的类型名
 	}
 	|  ID
 	{
-		String var_name = $ID.text;
-		if(MiniJavaParser.isKeyWord(var_name))   //检查是否用关键字做ID
-		{
-			System.out.println("error: keword: " +var_name + " is used as an ID "+ " at " +$ID.line + ":"+$ID.pos);
+		boolean found = false;
+		//检查ID是否存在
+		ParserRuleContext parent = $ctx.getParent();
+		while(!(parent instanceof Method_declContext)){
+			parent = parent.getParent();
 		}
-		
-		Var_declContext v = MiniJavaParser.findVar($ctx,var_name);
-		if (v!=null)
-			$type = v.type;
 	}
 	|  'true'
 	{
@@ -491,25 +457,17 @@ expr returns [String type]:      //type记录表达式的类型名
 	|  'this'
 	{
 		//this对象的类型名是所在类的类名
-		ParserRuleContext parent=$ctx.getParent();
-		while(!(parent instanceof Class_declContext)) {
-			parent=parent.getParent();
-		}
-		Class_declContext c=(Class_declContext)parent;
-		$type = c.name;
+		//$type = "boolean";
 	}
 	;
 
-array_index:
-	('[' expr ']')+
-	;
-
-MEMBER_OP:
-	'.'
+array_decl:
+	('[expr]')+
 	;
 
 ASSIGN_OP:
-	 '+='|'-='|'*='|'/='|'='
+	 '+='|'-='|'*='|'/='
+	|'+'|'-'|'*'|'/'
 	;
 		
 SEMICOLON

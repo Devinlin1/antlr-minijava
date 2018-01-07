@@ -60,6 +60,16 @@ public interface MiniJavaListener extends ParseTreeListener {
 	 */
 	void exitMethod_decl(MiniJavaParser.Method_declContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link MiniJavaParser#func_head_name}.
+	 * @param ctx the parse tree
+	 */
+	void enterFunc_head_name(MiniJavaParser.Func_head_nameContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MiniJavaParser#func_head_name}.
+	 * @param ctx the parse tree
+	 */
+	void exitFunc_head_name(MiniJavaParser.Func_head_nameContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code ParaDecl}
 	 * labeled alternative in {@link MiniJavaParser#para_decl}.
 	 * @param ctx the parse tree
@@ -162,13 +172,13 @@ public interface MiniJavaListener extends ParseTreeListener {
 	 */
 	void exitExpr(MiniJavaParser.ExprContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link MiniJavaParser#array_decl}.
+	 * Enter a parse tree produced by {@link MiniJavaParser#array_index}.
 	 * @param ctx the parse tree
 	 */
-	void enterArray_decl(MiniJavaParser.Array_declContext ctx);
+	void enterArray_index(MiniJavaParser.Array_indexContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link MiniJavaParser#array_decl}.
+	 * Exit a parse tree produced by {@link MiniJavaParser#array_index}.
 	 * @param ctx the parse tree
 	 */
-	void exitArray_decl(MiniJavaParser.Array_declContext ctx);
+	void exitArray_index(MiniJavaParser.Array_indexContext ctx);
 }

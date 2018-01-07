@@ -78,6 +78,18 @@ public class MiniJavaBaseListener implements MiniJavaListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterFunc_head_name(MiniJavaParser.Func_head_nameContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFunc_head_name(MiniJavaParser.Func_head_nameContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterParaDecl(MiniJavaParser.ParaDeclContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -198,13 +210,13 @@ public class MiniJavaBaseListener implements MiniJavaListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterArray_decl(MiniJavaParser.Array_declContext ctx) { }
+	@Override public void enterArray_index(MiniJavaParser.Array_indexContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitArray_decl(MiniJavaParser.Array_declContext ctx) { }
+	@Override public void exitArray_index(MiniJavaParser.Array_indexContext ctx) { }
 
 	/**
 	 * {@inheritDoc}
